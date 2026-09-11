@@ -68,8 +68,14 @@ const manifest = {
     ],
     browser_specific_settings: {
         gecko: {
-            id: "riok@octonezd.me",
+            id: "oldlander@13erte",
             strict_min_version: "113.0",
+            // Required for new extensions submitted to AMO since 2025-11-03.
+            // OldLander keeps everything local and only talks to reddit.com,
+            // so it collects/transmits no personal data.
+            data_collection_permissions: {
+                required: ["none"],
+            },
         },
         gecko_android: {},
     },
