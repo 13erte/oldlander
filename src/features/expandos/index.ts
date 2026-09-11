@@ -21,6 +21,7 @@ import {
     fetchSelftext,
     getRenderedSelftext,
     removeWhenNativeSelftextAppears,
+    INJECTED_SELFTEXT_CLASS,
 } from "./selftext";
 // @ts-ignore
 import dashjsSource from "../../../node_modules/dashjs/dist/modern/umd/dash.all.min.js?raw";
@@ -134,7 +135,7 @@ export default class Expandos extends OLFeature {
             "may-blank-within",
             "md-container",
             "set-correct-color",
-            "ol-text-expando",
+            INJECTED_SELFTEXT_CLASS,
         );
         expandoEl.innerHTML = selftext;
         post.appendChild(expandoEl);

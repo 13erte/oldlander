@@ -4,25 +4,38 @@
  * https://github.com/OctoNezd/oldlander/issues/171
  */
 
+/** Marks our own injected copy so it is never mistaken for one of reddit's. */
+export const INJECTED_SELFTEXT_CLASS = "ol-text-expando";
+
 /**
- * The selftext reddit has already rendered into the post's native expando, as
- * HTML. Empty when the post has no selftext, or when its expando has not been
- * initialized yet (which is the case while "auto expand media previews" is off).
+ * The selftext reddit is already showing for this post, as HTML, or an empty
+ * string when there is none on the page.
+ *
+ * Reddit puts it in two different places depending on the page: inside the media
+ * expando on listings, and directly in the post's entry on comment pages. Both
+ * have to count — checking only the expando meant a second copy got injected
+ * right next to the one reddit was already rendering.
  *
  * `post.dataset.selftext` deliberately is not used here: it is populated by the
  * posts feature, which runs *after* the expandos feature, so it is always empty
  * at the point these checks happen.
  */
 export function getRenderedSelftext(post: HTMLDivElement): string {
-    const expando = post.querySelector<HTMLDivElement>(".expando");
-    if (!expando || expando.classList.contains("expando-uninitialized")) {
-        return "";
+    const bodies = post.querySelectorAll<HTMLElement>(
+        `.usertext-body:not(.${INJECTED_SELFTEXT_CLASS})`,
+    );
+    for (const body of bodies) {
+        // An expando reddit has not initialized yet is not showing anything.
+        const expando = body.closest(".expando");
+        if (expando !== null && expando.classList.contains("expando-uninitialized")) {
+            continue;
+        }
+        // textContent rather than innerText: presence must not depend on layout.
+        if ((body.textContent ?? "").trim() !== "") {
+            return body.innerHTML;
+        }
     }
-    const body = expando.querySelector<HTMLElement>(".usertext-body");
-    if (!body || body.innerText.trim() === "") {
-        return "";
-    }
-    return body.innerHTML;
+    return "";
 }
 
 /**
