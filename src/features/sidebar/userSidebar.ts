@@ -3,6 +3,22 @@ import buildSidebar from "./buildSidebar";
 import "./css/userSidebar.css";
 import { getSubreddits } from "./getSubreddits";
 
+/**
+ * Feeds that are always reachable, regardless of what the user is subscribed to.
+ * Links are kept relative so they stay on whichever reddit host is in use
+ * (old.reddit.com, www.reddit.com, ...).
+ */
+const GLOBAL_FEEDS = [
+    { text: "Homepage", link: "/", icon: "home" },
+    { text: "All", link: "/r/all/", icon: "public" },
+] as const;
+
+/** Reddit serves both `/r/all` and `/r/all/`, so compare without the trailing slash. */
+function isCurrentPath(link: string) {
+    const withoutTrailingSlash = (path: string) => path.replace(/\/+$/, "");
+    return withoutTrailingSlash(location.pathname) === withoutTrailingSlash(link);
+}
+
 function createSidebarItem(
     text: string,
     link: string,
@@ -229,9 +245,16 @@ export default async function buildUserSidebar() {
 
     innerSidebar.innerHTML = `<p class="sidebar-apptitle">🛸 OldLander</p>`;
     innerSidebar.classList.add("side");
-    innerSidebar.appendChild(
-        createSidebarItem("Homepage", "/", "home", location.pathname == "/"),
-    );
+    for (const feed of GLOBAL_FEEDS) {
+        innerSidebar.appendChild(
+            createSidebarItem(
+                feed.text,
+                feed.link,
+                feed.icon,
+                isCurrentPath(feed.link),
+            ),
+        );
+    }
 
     const headerItems = document.createElement("div");
     innerSidebar.appendChild(headerItems);
