@@ -103,3 +103,25 @@ export async function getSelftext(post: HTMLDivElement): Promise<string> {
     }
     return await fetchSelftext(post);
 }
+
+/** Block-level tags whose boundaries stand in for line breaks in reddit markup. */
+const BLOCK_TAGS = "p, div, br, li, blockquote, pre, h1, h2, h3, h4, h5, h6";
+
+/**
+ * A post's selftext as plain text, for surfaces that render captions as text
+ * rather than markup (the gallery caption escapes whatever it is given, so
+ * handing it HTML shows the raw tags).
+ */
+export async function getSelftextText(post: HTMLDivElement): Promise<string> {
+    const html = await getSelftext(post);
+    if (html === "") {
+        return "";
+    }
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    // textContent alone would run paragraphs together, and drops reddit's
+    // <!-- SC_OFF --> markers for free.
+    doc.body
+        .querySelectorAll(BLOCK_TAGS)
+        .forEach((element) => element.after(document.createTextNode("\n")));
+    return (doc.body.textContent ?? "").replace(/\n{3,}/g, "\n\n").trim();
+}

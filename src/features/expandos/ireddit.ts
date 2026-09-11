@@ -1,5 +1,5 @@
 import ExpandoProvider from "./expandoProvider";
-import { getSelftext } from "./selftext";
+import { getSelftextText } from "./selftext";
 
 export default class iReddIt implements ExpandoProvider {
     sitename = "i.redd.it";
@@ -15,8 +15,9 @@ export default class iReddIt implements ExpandoProvider {
         }
         // Listing pages never populate `dataset.selftext`, so reading it here
         // left image posts with text showing no text at all when opened from a
-        // listing. https://github.com/OctoNezd/oldlander/issues/171
-        const selftext = await getSelftext(post);
+        // listing. The caption is rendered as text, so it must not be HTML.
+        // https://github.com/OctoNezd/oldlander/issues/171
+        const selftext = await getSelftextText(post);
         return [
             {
                 imageSrc: url,
