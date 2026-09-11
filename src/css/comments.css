@@ -2,3 +2,13 @@
     margin-left: 0px;
     border-left: 1px solid var(--md-sys-color-outline-variant); /* darken line to make comment nesting clearer */
 }
+
+/*
+ * Reddit hides a collapsed comment's actions itself, but OldLander's
+ * reimplemented vote row sets `display: inline-flex !important`, which wins over
+ * that. Re-hide both the native buttons and our vote row while collapsed.
+ */
+.comment.collapsed .flat-list.buttons,
+.comment.collapsed .ol-vote-container {
+    display: none !important;
+}

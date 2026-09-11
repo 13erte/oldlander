@@ -9,6 +9,10 @@
 .ol-post-container .expando-button {
     display: none;
 }
+/* No thumbnail to tap, so the native expando button is the only way in. */
+.ol-post-container.ol-no-thumbnail .expando-button {
+    display: block;
+}
 .imagePost .expando-button.expanded:not(.need-to-collapse) {
     display: block;
 }

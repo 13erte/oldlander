@@ -2,6 +2,12 @@ import querySelectorAsync from "../../utility/querySelectorAsync";
 import buildSidebar from "./buildSidebar";
 import "./css/userSidebar.css";
 import { getSubreddits } from "./getSubreddits";
+import {
+    createSidebarItem,
+    createSidebarSubheading,
+    isCurrentPath,
+} from "./sidebarItem";
+import buildSortLinks from "./sortLinks";
 
 /**
  * Feeds that are always reachable, regardless of what the user is subscribed to.
@@ -10,68 +16,9 @@ import { getSubreddits } from "./getSubreddits";
  */
 const GLOBAL_FEEDS = [
     { text: "Homepage", link: "/", icon: "home" },
+    { text: "Popular", link: "/r/popular/", icon: "trending_up" },
     { text: "All", link: "/r/all/", icon: "public" },
 ] as const;
-
-/** Reddit serves both `/r/all` and `/r/all/`, so compare without the trailing slash. */
-function isCurrentPath(link: string) {
-    const withoutTrailingSlash = (path: string) => path.replace(/\/+$/, "");
-    return withoutTrailingSlash(location.pathname) === withoutTrailingSlash(link);
-}
-
-function createSidebarItem(
-    text: string,
-    link: string,
-    icon: string,
-    isActive: boolean,
-    cls?: string | Array<string>,
-) {
-    const item = document.createElement("a");
-    if (cls !== undefined) {
-        if (!Array.isArray(cls)) {
-            cls = [cls];
-        }
-        item.classList.add(...cls);
-    }
-    item.href = link;
-    item.classList.add("sidebar-item");
-
-    if (icon.startsWith("http")) {
-        const img = document.createElement("img");
-        img.src = icon;
-        img.width = 40;
-        img.height = 40;
-        item.prepend(img);
-    } else {
-        const iconEl = document.createElement("span");
-        iconEl.classList.add("material-symbols-outlined", "ol-icon");
-        iconEl.innerText = icon || "forum";
-        item.appendChild(iconEl);
-    }
-
-    const labelEl = document.createElement("span");
-    labelEl.classList.add("sidebar-text");
-    labelEl.innerText = text;
-    item.appendChild(labelEl);
-
-    if (isActive) {
-        item.classList.add("sidebar-item-active");
-        item.removeAttribute("href");
-    }
-    return item;
-}
-
-function createSidebarSubheading(text: string, button?: HTMLButtonElement) {
-    const item = document.createElement("p");
-    const textEl = document.createElement("span");
-    textEl.innerText = text;
-    item.appendChild(textEl);
-    item.classList.add("sidebar-headline");
-    if (button) {
-        item.appendChild(button);
-    }
-    return item;
-}
 
 async function setupMultireddits(parentContainer: HTMLDivElement) {
     await querySelectorAsync(".multis");
@@ -209,7 +156,7 @@ async function buildHeaderItems(parentContainer: HTMLDivElement) {
             "Reddit Preferences",
             prefslink,
             "settings",
-            location.href === prefslink,
+            isCurrentPath(prefslink),
         ),
     );
 
@@ -255,6 +202,10 @@ export default async function buildUserSidebar() {
             ),
         );
     }
+
+    const sortLinks = document.createElement("div");
+    innerSidebar.appendChild(sortLinks);
+    buildSortLinks(sortLinks);
 
     const headerItems = document.createElement("div");
     innerSidebar.appendChild(headerItems);

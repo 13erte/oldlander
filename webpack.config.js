@@ -4,6 +4,10 @@ const GenerateJsonPlugin = require("generate-json-webpack-plugin");
 const TerserWebpackPlugin = require("terser-webpack-plugin");
 const path = require("path");
 
+// Development noise that should not reach released builds. console.error and
+// console.warn are deliberately absent so real failures still surface to users.
+const DROPPED_CONSOLE_CALLS = ["console.log", "console.info", "console.debug"];
+
 function getNextRevisionNumber(version) {
     // get a list of tags with the specified version number (but with any revision number)
     const existingVersions = require("child_process")
@@ -192,6 +196,15 @@ module.exports = (env, argv) => {
     if (argv.mode === "development") {
         webpackConfig.devtool = "inline-source-map";
         webpackConfig.entry.cs = "./src/cs_dev.ts"
+    } else {
+        // Keep the default minification behaviour, but strip debug logging.
+        webpackConfig.optimization.minimizer = [
+            new TerserWebpackPlugin({
+                terserOptions: {
+                    compress: { pure_funcs: DROPPED_CONSOLE_CALLS },
+                },
+            }),
+        ];
     }
     if (env.BROWSER === "user.js") {
         console.log("Making user.js version");
@@ -209,6 +222,7 @@ module.exports = (env, argv) => {
                 terserOptions: {
                     compress: {
                         passes: 2,
+                        pure_funcs: DROPPED_CONSOLE_CALLS,
                     },
                     output: {
                         comments: function (node, comment) {

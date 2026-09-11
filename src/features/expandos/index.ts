@@ -17,6 +17,11 @@ import { CustomEventSlideItemLoad } from "lightgallery/types";
 import "video.js";
 import { allowBodyScroll, preventBodyScroll } from "../../utility/bodyScroll";
 import vReddIt from "./vreddit";
+import {
+    fetchSelftext,
+    getRenderedSelftext,
+    removeWhenNativeSelftextAppears,
+} from "./selftext";
 // @ts-ignore
 import dashjsSource from "../../../node_modules/dashjs/dist/modern/umd/dash.all.min.js?raw";
 
@@ -107,40 +112,33 @@ export default class Expandos extends OLFeature {
         this.setupTextExpando(post);
     }
     private async setupTextExpando(post: HTMLDivElement) {
-        const meta_url = `${location.protocol}//${location.host}/by_id/${post.dataset.fullname}.json`;
         if (!document.body.classList.contains("comments-page")) {
             return;
         }
-        if (["", undefined].includes(post.dataset.selftext)) {
-            console.log("fetching meta from", meta_url);
-            const meta = await (
-                await fetch(meta_url, {
-                    credentials: "include",
-                    mode: "cors",
-                    cache: "no-store",
-                })
-            ).json();
-            const expandoEl = document.createElement("div");
-            expandoEl.classList.add(
-                "usertext-body",
-                "may-blank-within",
-                "md-container",
-                "set-correct-color",
-            );
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(
-                meta.data.children[0].data.selftext_html,
-                "text/html",
-            );
-            if (doc === null || doc.documentElement.textContent === null) {
-                return;
-            }
-            expandoEl.innerHTML = doc.documentElement.textContent;
-            if (expandoEl.innerText === "null") {
-                return;
-            }
-            post.appendChild(expandoEl);
+        // When the native expando is already showing the text, adding our own
+        // copy is what made it appear twice. https://github.com/OctoNezd/oldlander/issues/171
+        if (getRenderedSelftext(post) !== "") {
+            return;
         }
+        const selftext = await fetchSelftext(post);
+        if (selftext === "") {
+            return;
+        }
+        // reddit may have expanded the post while the fetch was in flight.
+        if (getRenderedSelftext(post) !== "") {
+            return;
+        }
+        const expandoEl = document.createElement("div");
+        expandoEl.classList.add(
+            "usertext-body",
+            "may-blank-within",
+            "md-container",
+            "set-correct-color",
+            "ol-text-expando",
+        );
+        expandoEl.innerHTML = selftext;
+        post.appendChild(expandoEl);
+        removeWhenNativeSelftextAppears(post, expandoEl);
     }
 
     private galleries: { [id: string]: Gallery | null } = {};

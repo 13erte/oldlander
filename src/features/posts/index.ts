@@ -10,6 +10,21 @@ import IndentCommentHide from "./indentCommentHide";
 import ReimplementVotes from "./reimplementVotes";
 import ButtonHide from "./buttonHide";
 
+/**
+ * OldLander hides Reddit's native expando button and expects the thumbnail to be
+ * the tap target instead. Subreddits configured without thumbnails therefore
+ * leave text posts with no way to expand at all, so give those posts the native
+ * button back. https://github.com/OctoNezd/oldlander/issues/135
+ */
+function revealExpandoWithoutThumbnail(postContainer: HTMLDivElement) {
+    const hasThumbnail = postContainer.querySelector(".thumbnail") !== null;
+    const hasExpandoButton =
+        postContainer.querySelector(".expando-button") !== null;
+    if (!hasThumbnail && hasExpandoButton) {
+        postContainer.classList.add("ol-no-thumbnail");
+    }
+}
+
 function setupLinkPost(post: HTMLDivElement) {
     const comments = post.querySelector<HTMLAnchorElement>(".comments");
     if (comments !== null) {
@@ -28,6 +43,7 @@ function setupLinkPost(post: HTMLDivElement) {
     const postContainer = setupPostContainer(post);
     setupExpando(post);
     setupExpandoButton(postContainer);
+    revealExpandoWithoutThumbnail(postContainer);
 }
 
 // export default function setupPosts() {

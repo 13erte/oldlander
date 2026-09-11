@@ -138,3 +138,6 @@ dist
 
 # AltStore Manifest
 altStoreManifest.json
+
+# macOS
+.DS_Store
